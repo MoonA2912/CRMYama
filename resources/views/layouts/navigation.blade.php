@@ -40,7 +40,7 @@ if (auth()->check() && auth()->user()->role === 'admin') {
             >
 
                 <img
-                    src="{{ asset('storage/images/logo-yama-green.png') }}"
+                    src="{{ asset('logo-yama-green.png') }}"
                     alt="Yama Golf Store"
                     class="w-11 h-11 object-contain"
                 >

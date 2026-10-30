@@ -22,7 +22,7 @@
             <a href="{{ route('catalog') }}" class="flex items-center gap-3">
 
                 <img
-                    src="{{ asset('storage/images/logo-yama-green.png') }}"
+                    src="{{ asset('logo-yama-green.png') }}"
                     alt="Yama Golf Store"
                     class="h-12 w-12 object-contain"
                 >
