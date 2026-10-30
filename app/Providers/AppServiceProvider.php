@@ -15,5 +15,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Blade::component('layouts.customer', 'customer-layout');
+        if ($this->app->environment('production')) {
+            \Illuminate\Support\Facades\URL::forceScheme('https');
+        }
     }
 }

@@ -85,12 +85,17 @@ class FeedbackController extends Controller
             ->with('success', 'Feedback berhasil diperbarui.');
     }
 
-    public function customerIndex()
+public function customerIndex()
 {
     $customer = auth()->user()->customer;
 
-    if (!$customer) {
-        abort(403);
+    if (!$customer || blank($customer->phone)) {
+        return redirect()
+            ->route('profile.edit')
+            ->with(
+                'error',
+                'Silakan lengkapi profil Anda, terutama nomor telepon, sebelum mengakses Feedback.'
+            );
     }
 
     $feedbacks = $customer->feedbacks()
@@ -103,34 +108,51 @@ class FeedbackController extends Controller
     return view('customer-feedback.index', compact('feedbacks'));
 }
 
-    public function customerCreate(Request $request)
+public function customerCreate(Request $request)
 {
     $customer = auth()->user()->customer;
 
-    if (!$customer) {
-        abort(403);
+    if (!$customer || blank($customer->phone)) {
+        return redirect()
+            ->route('profile.edit')
+            ->with(
+                'error',
+                'Silakan lengkapi profil Anda, terutama nomor telepon, sebelum mengirim Feedback.'
+            );
     }
 
     $order = null;
 
     if ($request->filled('order_id')) {
-
         $order = $customer->orders()
             ->where('id', $request->order_id)
             ->where('status', 'completed')
-            ->firstOrFail();
+            ->first();
 
+        if (!$order) {
+            return redirect()
+                ->route('customer.orders')
+                ->with(
+                    'error',
+                    'Pesanan tidak ditemukan atau belum selesai.'
+                );
+        }
     }
 
     return view('customer-feedback.create', compact('order'));
 }
 
-    public function customerStore(Request $request)
+public function customerStore(Request $request)
 {
     $customer = auth()->user()->customer;
 
-    if (!$customer) {
-        abort(403);
+    if (!$customer || blank($customer->phone)) {
+        return redirect()
+            ->route('profile.edit')
+            ->with(
+                'error',
+                'Silakan lengkapi profil Anda, terutama nomor telepon, sebelum mengirim Feedback.'
+            );
     }
 
     $validated = $request->validate([
@@ -145,39 +167,31 @@ class FeedbackController extends Controller
         'rating.max' => 'Rating maksimal 5.',
     ]);
 
-
-    // Pastikan pesanan milik customer yang sedang login
-    // dan statusnya sudah selesai.
+    // Pastikan pesanan milik pelanggan yang login
+    // dan sudah berstatus completed.
     $order = $customer->orders()
         ->where('id', $validated['order_id'])
         ->where('status', 'completed')
         ->first();
 
     if (!$order) {
-
         return back()
             ->withErrors([
-                'order_id' => 'Pesanan yang dipilih tidak valid atau belum selesai.',
+                'order_id' => 'Pesanan tidak valid atau belum selesai.',
             ])
             ->withInput();
-
     }
 
-
-    // Cegah customer memberikan feedback lebih dari satu kali
-    // untuk pesanan yang sama.
+    // Satu feedback untuk setiap pesanan.
     $alreadyFeedback = $customer->feedbacks()
         ->where('order_id', $order->id)
         ->exists();
 
     if ($alreadyFeedback) {
-
         return redirect()
             ->route('customer.orders.show', $order)
             ->with('error', 'Pesanan ini sudah memiliki feedback.');
-
     }
-
 
     Feedback::create([
         'customer_id' => $customer->id,
@@ -187,7 +201,6 @@ class FeedbackController extends Controller
         'status' => 'baru',
         'response' => null,
     ]);
-
 
     return redirect()
         ->route('customer.feedback')

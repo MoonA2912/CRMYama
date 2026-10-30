@@ -109,12 +109,17 @@ class OrderController extends Controller
     {
         //
     }
-    public function customerOrders()
+public function customerOrders()
 {
     $customer = auth()->user()->customer;
 
-    if (!$customer) {
-        abort(403);
+    if (!$customer || blank($customer->phone)) {
+        return redirect()
+            ->route('profile.edit')
+            ->with(
+                'error',
+                'Silakan lengkapi profil Anda, terutama nomor telepon, sebelum mengakses Orders.'
+            );
     }
 
     $orders = $customer->orders()
@@ -125,16 +130,21 @@ class OrderController extends Controller
     return view('customer-orders.index', compact('orders'));
 }
 
-
 public function customerShow(Order $order)
 {
     $customer = auth()->user()->customer;
 
-    if (!$customer) {
-        abort(403);
+    if (!$customer || blank($customer->phone)) {
+        return redirect()
+            ->route('profile.edit')
+            ->with(
+                'error',
+                'Silakan lengkapi profil Anda, terutama nomor telepon, sebelum mengakses Orders.'
+            );
     }
 
-    if ($order->customer_id !== $customer->id) {
+    // Pastikan pesanan milik pelanggan yang sedang login.
+    if ((int) $order->customer_id !== (int) $customer->id) {
         abort(403);
     }
 
@@ -145,20 +155,26 @@ public function customerShow(Order $order)
 
     return view('customer-orders.show', compact('order'));
 }
+
 public function customerCancel(Order $order)
 {
     $customer = auth()->user()->customer;
 
-    if (!$customer) {
+    if (!$customer || blank($customer->phone)) {
+        return redirect()
+            ->route('profile.edit')
+            ->with(
+                'error',
+                'Silakan lengkapi profil Anda, terutama nomor telepon, sebelum mengakses Orders.'
+            );
+    }
+
+    // Pelanggan hanya boleh membatalkan pesanan miliknya sendiri.
+    if ((int) $order->customer_id !== (int) $customer->id) {
         abort(403);
     }
 
-    // Pastikan pesanan memang milik customer yang sedang login
-    if ($order->customer_id !== $customer->id) {
-        abort(403);
-    }
-
-    // Hanya pesanan pending yang boleh dibatalkan
+    // Hanya pesanan pending yang dapat dibatalkan.
     if ($order->status !== 'pending') {
         return back()->with(
             'error',
@@ -168,34 +184,25 @@ public function customerCancel(Order $order)
 
     $order->load('items');
 
-    \Illuminate\Support\Facades\DB::transaction(function () use ($order) {
+    \Illuminate\Support\Facades\DB::transaction(
+        function () use ($order) {
+            foreach ($order->items as $item) {
+                $product = \App\Models\Product::lockForUpdate()
+                    ->find($item->product_id);
 
-        foreach ($order->items as $item) {
-
-            $product = \App\Models\Product::lockForUpdate()
-                ->find($item->product_id);
-
-            if ($product) {
-                $product->increment(
-                    'stock',
-                    $item->quantity
-                );
+                if ($product) {
+                    $product->increment('stock', $item->quantity);
+                }
             }
-        }
 
-        $order->update([
-            'status' => 'cancelled',
-        ]);
-    });
+            $order->update([
+                'status' => 'cancelled',
+            ]);
+        }
+    );
 
     return redirect()
-    ->route(
-        'customer.orders.show',
-        $order
-    )
-    ->with(
-        'success',
-        'Pesanan berhasil dibatalkan.'
-    );
+        ->route('customer.orders.show', $order)
+        ->with('success', 'Pesanan berhasil dibatalkan.');
 }
 }
