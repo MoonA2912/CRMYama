@@ -16,7 +16,7 @@
     ========================== --}}
     <section
         class="relative min-h-screen bg-cover bg-center overflow-hidden"
-        style="background-image: url('{{ asset('storage/images/Landing.png') }}');"
+        style="background-image: url('{{ asset('Landing.png') }}');"
     >
 
         {{-- Overlay --}}
@@ -35,7 +35,7 @@
                 <a href="{{ url('/') }}" class="block">
 
                     <img
-                    src="{{ asset('storage/images/logo-yama.png') }}"
+                    src="{{ asset('logo-yama.png') }}"
                     alt="Yama Golf Store"
                     class="h-14 w-14 object-contain"
                     >

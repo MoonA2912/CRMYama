@@ -34,6 +34,10 @@
             "dest": "/public/logo-yama.png"
         },
         {
+            "src": "/Landing\\.png",
+            "dest": "/public/Landing.png"
+        },
+        {
             "src": "/(.*)",
             "dest": "/api/index.php"
         }

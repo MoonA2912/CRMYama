@@ -14,7 +14,7 @@
     <main
         class="min-h-screen w-full relative flex items-center justify-center px-6 py-12
                bg-cover bg-center"
-        style="background-image: url('{{ asset('storage/images/Landing.png') }}');"
+        style="background-image: url('{{ asset('Landing.png') }}');"
     >
 
         {{-- DARK GREEN OVERLAY --}}
@@ -31,7 +31,7 @@
                 <a href="{{ url('/') }}" class="inline-block">
 
                     <img
-                        src="{{ asset('storage/images/logo-yama.png') }}"
+                        src="{{ asset('logo-yama.png') }}"
                         alt="Yama Golf Store"
                         class="h-28 w-28 object-contain"
                     >
@@ -274,4 +274,3 @@
 
 </body>
 </html>
-
