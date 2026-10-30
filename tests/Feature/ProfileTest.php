@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Customer;
 use App\Models\User;
 
 test('profile page is displayed', function () {
@@ -12,6 +13,20 @@ test('profile page is displayed', function () {
     $response->assertOk();
 });
 
+test('profile page is displayed for a user with a customer account', function () {
+    $user = User::factory()->create();
+
+    Customer::create([
+        'user_id' => $user->id,
+        'name' => $user->name,
+        'phone' => '555-0100',
+    ]);
+
+    $this->actingAs($user)
+        ->get('/profile')
+        ->assertOk();
+});
+
 test('profile information can be updated', function () {
     $user = User::factory()->create();
 
@@ -20,6 +35,7 @@ test('profile information can be updated', function () {
         ->patch('/profile', [
             'name' => 'Test User',
             'email' => 'test@example.com',
+            'phone' => '555-0101',
         ]);
 
     $response
@@ -41,6 +57,7 @@ test('email verification status is unchanged when the email address is unchanged
         ->patch('/profile', [
             'name' => 'Test User',
             'email' => $user->email,
+            'phone' => '555-0101',
         ]);
 
     $response
