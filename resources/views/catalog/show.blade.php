@@ -214,7 +214,7 @@
                         {{-- =========================
                             ADD TO CART
                         ========================== --}}
-                        @if($product->stock > 0)
+                        @if(auth()->user()->role === 'customer' && $product->stock > 0)
 
                             <form
                                 action="{{ route('cart.add', $product) }}"
@@ -394,7 +394,7 @@
 
                             </form>
 
-                        @else
+                        @elseif(auth()->user()->role === 'customer')
 
                             <button
                                 disabled
@@ -407,6 +407,12 @@
                                 Stok Habis
                             </button>
 
+                        @endif
+
+                        @if(auth()->user()->role === 'admin')
+                            <p class="mt-7 rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-600">
+                                Catalog view only. Ordering is available to customer accounts.
+                            </p>
                         @endif
 
 

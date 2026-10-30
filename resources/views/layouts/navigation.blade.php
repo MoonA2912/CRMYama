@@ -102,6 +102,17 @@ if (auth()->check() && auth()->user()->role === 'admin') {
                     Produk
                 </a>
 
+                <!-- Catalog -->
+                <a
+                    href="{{ route('catalog') }}"
+                    class="px-4 py-2 rounded-xl text-sm font-medium transition
+                        {{ request()->routeIs('catalog*')
+                            ? 'bg-[#06330A] text-white'
+                            : 'text-gray-600 hover:bg-white hover:text-[#06330A]' }}"
+                >
+                    Catalog
+                </a>
+
 
                 <!-- Pesanan -->
                 <a
@@ -376,6 +387,18 @@ if (auth()->check() && auth()->user()->role === 'admin') {
                            : 'text-gray-600 hover:bg-[#F7F7F5]' }}"
             >
                 <span>Produk</span>
+            </a>
+
+            <!-- Catalog -->
+            <a
+                href="{{ route('catalog') }}"
+                class="flex items-center justify-between
+                       px-4 py-3 rounded-xl text-sm font-medium
+                       {{ request()->routeIs('catalog*')
+                           ? 'bg-[#06330A] text-white'
+                           : 'text-gray-600 hover:bg-[#F7F7F5]' }}"
+            >
+                <span>Catalog</span>
             </a>
 
 

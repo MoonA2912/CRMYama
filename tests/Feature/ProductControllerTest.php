@@ -5,6 +5,40 @@ use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 
+it('allows admins to view active products in the catalog', function () {
+    $admin = User::factory()->create(['role' => 'admin']);
+    Product::create([
+        'name' => 'Catalog Driver',
+        'category' => 'Golf Club',
+        'price' => 100,
+        'stock' => 3,
+        'is_active' => true,
+    ]);
+
+    $this->actingAs($admin)
+        ->get(route('catalog'))
+        ->assertOk()
+        ->assertSee('Catalog')
+        ->assertSee('Catalog Driver');
+});
+
+it('allows admins to view product details without add-to-cart controls', function () {
+    $admin = User::factory()->create(['role' => 'admin']);
+    $product = Product::create([
+        'name' => 'Catalog Driver',
+        'category' => 'Golf Club',
+        'price' => 100,
+        'stock' => 3,
+        'is_active' => true,
+    ]);
+
+    $this->actingAs($admin)
+        ->get(route('catalog.show', $product))
+        ->assertOk()
+        ->assertSee('Catalog Driver')
+        ->assertDontSee('Tambahkan ke Keranjang');
+});
+
 it('stores a product image URL returned by Cloudinary', function () {
     config([
         'services.cloudinary.cloud_name' => 'test-cloud',

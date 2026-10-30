@@ -161,7 +161,7 @@
                         class="text-xs font-medium tracking-wide text-white"
                     />
 
-                    <x-text-input
+                    <x-password-input
                         id="password"
                         type="password"
                         name="password"
@@ -200,7 +200,7 @@
                         class="text-xs font-medium tracking-wide text-white"
                     />
 
-                    <x-text-input
+                    <x-password-input
                         id="password_confirmation"
                         type="password"
                         name="password_confirmation"

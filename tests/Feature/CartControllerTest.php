@@ -5,6 +5,34 @@ use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 
+it('prevents admins from adding products to a cart', function () {
+    $admin = User::factory()->create(['role' => 'admin']);
+    $product = Product::create([
+        'name' => 'Golf Ball',
+        'category' => 'Golf Ball',
+        'price' => 10,
+        'stock' => 5,
+        'is_active' => true,
+    ]);
+
+    $this->actingAs($admin)
+        ->post(route('cart.add', $product), ['quantity' => 1])
+        ->assertForbidden();
+
+    $this->assertDatabaseCount('carts', 0);
+});
+
+it('prevents admins from accessing cart and checkout pages', function () {
+    $admin = User::factory()->create(['role' => 'admin']);
+
+    $this->actingAs($admin)
+        ->get(route('cart.index'))
+        ->assertForbidden();
+
+    $this->get(route('checkout'))
+        ->assertForbidden();
+});
+
 it('stores custom design image URLs returned by Cloudinary', function () {
     config([
         'services.cloudinary.cloud_name' => 'test-cloud',
@@ -18,7 +46,7 @@ it('stores custom design image URLs returned by Cloudinary', function () {
         ]),
     ]);
 
-    $user = User::factory()->create();
+    $user = User::factory()->create(['role' => 'customer']);
     $product = Product::create([
         'name' => 'Golf Ball',
         'category' => 'Golf Ball',
