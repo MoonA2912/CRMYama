@@ -255,6 +255,7 @@ if (auth()->check() && auth()->user()->role === 'admin') {
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
+                            aria-hidden="true"
                         >
                             <path
                                 stroke-linecap="round"
@@ -304,6 +305,9 @@ if (auth()->check() && auth()->user()->role === 'admin') {
                 class="inline-flex items-center justify-center
                        p-2 rounded-xl text-gray-500
                        hover:bg-white transition"
+                aria-label="Toggle navigation menu"
+                x-bind:aria-expanded="open.toString()"
+                aria-controls="mobile-navigation"
             >
 
                 <svg
@@ -311,6 +315,7 @@ if (auth()->check() && auth()->user()->role === 'admin') {
                     stroke="currentColor"
                     fill="none"
                     viewBox="0 0 24 24"
+                    aria-hidden="true"
                 >
 
                     <path
@@ -344,6 +349,7 @@ if (auth()->check() && auth()->user()->role === 'admin') {
 
 <!-- Mobile Navigation -->
 <div
+    id="mobile-navigation"
     :class="{ 'block': open, 'hidden': !open }"
     class="hidden sm:hidden border-t border-gray-200 bg-white"
 >

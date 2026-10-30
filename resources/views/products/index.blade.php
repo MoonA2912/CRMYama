@@ -12,7 +12,7 @@
             </h2>
 
             <p class="text-sm text-gray-500 mt-1">
-                Kelola produk dan ketersediaan barang dalam sistem CRM.
+                Kelola produk dan ketersediaan barang di toko.
             </p>
         </div>
     </x-slot>

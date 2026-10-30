@@ -46,24 +46,6 @@
                 {{-- MENU KANAN --}}
                 <div class="ml-auto flex items-center gap-2 sm:gap-3">
 
-                    {{-- KATALOG --}}
-                    <a
-                        href="{{ route('catalog') }}"
-                        class="hidden sm:inline-flex
-                               px-5 py-2.5
-                               border border-white/80
-                               rounded-full
-                               text-sm font-medium
-                               text-white
-                               bg-transparent
-                               hover:bg-white
-                               hover:text-black
-                               transition duration-300"
-                    >
-                        Katalog
-                    </a>
-
-
                     @guest
 
                         {{-- LOGIN --}}

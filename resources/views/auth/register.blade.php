@@ -236,8 +236,8 @@
                     <x-primary-button
                         class="w-full
                                h-12 justify-center 
-                               bg-[#06330A] 
-                               hover:bg-[#0A4710] 
+                               bg-[#032608]
+                               hover:bg-[#021d06]
                                text-white 
                                rounded-md 
                                text-xs 

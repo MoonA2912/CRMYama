@@ -8,7 +8,7 @@
                 </p>
 
                 <h2 class="mt-1 text-2xl font-bold tracking-tight text-[#06330A]">
-                    Laporan & Analytical CRM
+                    Laporan & Analisis Bisnis
                 </h2>
 
                 <p class="mt-1 text-sm text-gray-500">
@@ -57,7 +57,7 @@
 
                         <div class="max-w-2xl">
                             <p class="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">
-                                Analytical CRM
+                                Ringkasan Bisnis
                             </p>
 
                             <h1 class="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
@@ -548,7 +548,7 @@
 
             </div>
 
-            {{-- INSIGHT ANALYTICAL CRM --}}
+            {{-- Business insights --}}
             <div class="mt-6 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
 
                 <div class="flex items-start gap-4">
@@ -571,7 +571,7 @@
 
                     <div class="flex-1">
                         <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[#06330A]/60">
-                            Analytical CRM
+                            Analisis Penjualan
                         </p>
 
                         <h3 class="mt-1 text-xl font-bold text-[#06330A]">

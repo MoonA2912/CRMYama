@@ -12,7 +12,7 @@
             </h2>
 
             <p class="text-sm text-gray-500 mt-1">
-                Kelola informasi pelanggan dalam sistem CRM Yama Golf Store.
+                Kelola informasi pelanggan Yama Golf Store.
             </p>
         </div>
     </x-slot>
@@ -34,7 +34,7 @@
                     </h3>
 
                     <p class="text-sm text-gray-500 mt-1">
-                        Data pelanggan yang terdaftar dalam sistem CRM.
+                        Daftar pelanggan yang terdaftar.
                     </p>
                 </div>
 
@@ -395,7 +395,7 @@
                                                        mt-1"
                                             >
                                                 Tambahkan pelanggan untuk mulai
-                                                mengelola data CRM.
+                                                mengelola data pelanggan.
                                             </p>
 
                                         </div>

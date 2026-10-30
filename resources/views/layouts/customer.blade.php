@@ -56,6 +56,8 @@
                 </a>
 
 
+                @auth
+
                 {{-- ORDERS --}}
                 @if(Route::has('customer.orders'))
 
@@ -165,6 +167,8 @@
 
                 @endif
 
+                @endauth
+
             </div>
 
 
@@ -207,6 +211,24 @@
 
                 @endauth
 
+                @guest
+
+                    <a
+                        href="{{ route('login') }}"
+                        class="px-4 py-2 text-sm text-gray-500 hover:text-[#06330A]"
+                    >
+                        Login
+                    </a>
+
+                    <a
+                        href="{{ route('register') }}"
+                        class="rounded-full bg-[#06330A] px-4 py-2 text-sm font-medium text-white hover:bg-[#06330A]/90"
+                    >
+                        Register
+                    </a>
+
+                @endguest
+
             </div>
 
 
@@ -242,6 +264,8 @@
                     Catalog
                 </a>
 
+
+                @auth
 
                 {{-- ORDERS --}}
                 @if(Route::has('customer.orders'))
@@ -312,6 +336,8 @@
 
                 @endif
 
+                @endauth
+
 
                 @auth
 
@@ -348,6 +374,26 @@
                     </div>
 
                 @endauth
+
+                @guest
+
+                    <div class="border-t border-gray-200 mt-3 pt-3">
+                        <a
+                            href="{{ route('login') }}"
+                            class="block px-4 py-3 text-sm text-gray-500 hover:text-[#06330A]"
+                        >
+                            Login
+                        </a>
+
+                        <a
+                            href="{{ route('register') }}"
+                            class="block px-4 py-3 text-sm font-medium text-[#06330A]"
+                        >
+                            Register
+                        </a>
+                    </div>
+
+                @endguest
 
             </div>
 

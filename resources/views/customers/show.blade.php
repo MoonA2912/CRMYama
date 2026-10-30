@@ -12,7 +12,7 @@
             </h2>
 
             <p class="text-sm text-gray-500 mt-1">
-                Informasi dan riwayat hubungan pelanggan dalam sistem CRM.
+                Informasi dan riwayat pelanggan.
             </p>
         </div>
     </x-slot>

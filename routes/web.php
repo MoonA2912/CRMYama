@@ -20,6 +20,11 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/catalog', [ProductController::class, 'catalog'])
+    ->name('catalog');
+Route::get('/catalog/{product}', [ProductController::class, 'customerShow'])
+    ->name('catalog.show');
+
 Route::get('/dashboard', function () {
 
     if (auth()->user()->role === 'admin') {
@@ -72,11 +77,6 @@ Route::get('/dashboard', function () {
 
 Route::middleware('auth')->group(function () {
 
-    // ROUTE UNTUK CUSTOMER & ADMIN
-    Route::get('/catalog', [ProductController::class, 'catalog'])
-        ->name('catalog');
-    Route::get('/catalog/{product}', [ProductController::class, 'customerShow'])
-        ->name('catalog.show');
     Route::middleware('customer')->group(function () {
         Route::post('/cart/add/{product}', [CartController::class, 'add'])
             ->name('cart.add');

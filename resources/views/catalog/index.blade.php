@@ -1,5 +1,5 @@
 @php
-    $catalogLayout = auth()->user()->role === 'admin'
+    $catalogLayout = auth()->check() && auth()->user()->role === 'admin'
         ? 'app-layout'
         : 'customer-layout';
 @endphp

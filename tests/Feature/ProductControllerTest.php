@@ -5,6 +5,36 @@ use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 
+it('allows guests to browse the catalog', function () {
+    Product::create([
+        'name' => 'Guest Catalog Driver',
+        'category' => 'Golf Club',
+        'price' => 100,
+        'stock' => 3,
+        'is_active' => true,
+    ]);
+
+    $this->get(route('catalog'))
+        ->assertOk()
+        ->assertSee('Guest Catalog Driver');
+});
+
+it('shows guests a login link to order from product details', function () {
+    $product = Product::create([
+        'name' => 'Guest Catalog Driver',
+        'category' => 'Golf Club',
+        'price' => 100,
+        'stock' => 3,
+        'is_active' => true,
+    ]);
+
+    $this->get(route('catalog.show', $product))
+        ->assertOk()
+        ->assertSee('Login untuk melakukan pemesanan')
+        ->assertSee('href="'.route('login').'"', false)
+        ->assertDontSee('Tambahkan ke Keranjang');
+});
+
 it('allows admins to view active products in the catalog', function () {
     $admin = User::factory()->create(['role' => 'admin']);
     Product::create([

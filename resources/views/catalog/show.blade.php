@@ -1,5 +1,5 @@
 @php
-    $catalogLayout = auth()->user()->role === 'admin'
+    $catalogLayout = auth()->check() && auth()->user()->role === 'admin'
         ? 'app-layout'
         : 'customer-layout';
 @endphp
@@ -214,7 +214,7 @@
                         {{-- =========================
                             ADD TO CART
                         ========================== --}}
-                        @if(auth()->user()->role === 'customer' && $product->stock > 0)
+                        @if(auth()->check() && auth()->user()->role === 'customer' && $product->stock > 0)
 
                             <form
                                 action="{{ route('cart.add', $product) }}"
@@ -394,7 +394,7 @@
 
                             </form>
 
-                        @elseif(auth()->user()->role === 'customer')
+                        @elseif(auth()->check() && auth()->user()->role === 'customer')
 
                             <button
                                 disabled
@@ -409,7 +409,18 @@
 
                         @endif
 
-                        @if(auth()->user()->role === 'admin')
+                        @guest
+                            @if($product->stock > 0)
+                                <a
+                                    href="{{ route('login') }}"
+                                    class="mt-7 block w-full rounded-xl bg-[#06330A] px-5 py-3.5 text-center text-sm font-medium text-white transition hover:bg-[#06330A]/90"
+                                >
+                                    Login untuk melakukan pemesanan
+                                </a>
+                            @endif
+                        @endguest
+
+                        @if(auth()->check() && auth()->user()->role === 'admin')
                             <p class="mt-7 rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-600">
                                 Catalog view only. Ordering is available to customer accounts.
                             </p>

@@ -12,7 +12,7 @@
             </h2>
 
             <p class="text-sm text-gray-500 mt-1">
-                Tambahkan data pelanggan baru ke sistem CRM.
+                Tambahkan pelanggan baru ke daftar pelanggan.
             </p>
         </div>
     </x-slot>

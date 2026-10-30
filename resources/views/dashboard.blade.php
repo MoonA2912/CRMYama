@@ -11,7 +11,7 @@
             </h2>
 
             <p class="text-sm text-gray-500 mt-1">
-                Kelola aktivitas CRM Yama Golf Store Palembang.
+                Kelola kegiatan Yama Golf Store Palembang.
             </p>
         </div>
     </x-slot>
@@ -50,7 +50,7 @@
 
                     <p class="text-sm text-white/70 mt-2 max-w-xl">
                         Pantau aktivitas pelanggan, pesanan, produk,
-                        dan interaksi CRM Yama Golf Store melalui dashboard.
+                        dan layanan Yama Golf Store melalui dashboard.
                     </p>
 
                 </div>
@@ -296,7 +296,7 @@
             </div>
 
 
-            {{-- Analytical CRM --}}
+            {{-- Business insights --}}
             <div
                 class="bg-white rounded-2xl border border-gray-100
                        shadow-sm overflow-hidden"
@@ -315,7 +315,7 @@
 
                             <p class="text-xs font-semibold uppercase
                                       tracking-[0.18em] text-[#06330A]">
-                                Analytical CRM
+                                Analisis Bisnis
                             </p>
 
                             <h3 class="text-xl font-bold text-gray-900 mt-1">
