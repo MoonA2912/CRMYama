@@ -108,7 +108,7 @@
                             @if($product->image)
 
                                 <img
-                                    src="{{ asset('storage/' . $product->image) }}"
+                                    src="{{ \App\Support\StoredMediaUrl::resolve($product->image) }}"
                                     alt="{{ $product->name }}"
                                     class="w-full h-full object-contain
                                            p-8 transition duration-300

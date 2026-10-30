@@ -2,13 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\CloudinaryUploadException;
 use App\Models\Cart;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\Voucher;
+use App\Support\CloudinaryUploader;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Models\Voucher;
 
 class CartController extends Controller
 {
@@ -18,9 +20,12 @@ class CartController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    public function add(Request $request, Product $product)
-    {
-        if (!$product->is_active) {
+    public function add(
+        Request $request,
+        Product $product,
+        CloudinaryUploader $cloudinaryUploader
+    ) {
+        if (! $product->is_active) {
             abort(404);
         }
 
@@ -59,7 +64,7 @@ class CartController extends Controller
 
         if ($printCustom) {
 
-            if (!$request->hasFile('design_image')) {
+            if (! $request->hasFile('design_image')) {
                 return back()
                     ->with(
                         'error',
@@ -76,25 +81,24 @@ class CartController extends Controller
                     'max:2048',
                 ],
             ], [
-                'design_image.required' =>
-                    'Gambar desain wajib diupload.',
+                'design_image.required' => 'Gambar desain wajib diupload.',
 
-                'design_image.file' =>
-                    'File desain tidak valid.',
+                'design_image.file' => 'File desain tidak valid.',
 
-                'design_image.mimes' =>
-                    'Desain harus berupa JPG, JPEG, PNG, atau WEBP.',
+                'design_image.mimes' => 'Desain harus berupa JPG, JPEG, PNG, atau WEBP.',
 
-                'design_image.max' =>
-                    'Ukuran desain maksimal 2 MB.',
+                'design_image.max' => 'Ukuran desain maksimal 2 MB.',
             ]);
 
-            $designImage = $request
-                ->file('design_image')
-                ->store(
-                    'printed-golf-balls',
-                    'public'
+            try {
+                $designImage = $cloudinaryUploader->upload(
+                    $request->file('design_image')
                 );
+            } catch (CloudinaryUploadException $exception) {
+                return back()
+                    ->withErrors(['design_image' => $exception->getMessage()])
+                    ->withInput();
+            }
         }
 
         /*
@@ -145,23 +149,17 @@ class CartController extends Controller
             */
 
             Cart::create([
-                'user_id' =>
-                    $user->id,
+                'user_id' => $user->id,
 
-                'product_id' =>
-                    $product->id,
+                'product_id' => $product->id,
 
-                'quantity' =>
-                    $quantity,
+                'quantity' => $quantity,
 
-                'print_custom' =>
-                    $printCustom,
+                'print_custom' => $printCustom,
 
-                'print_price' =>
-                    $printPrice,
+                'print_price' => $printPrice,
 
-                'design_image' =>
-                    $designImage,
+                'design_image' => $designImage,
             ]);
         }
 
@@ -175,7 +173,6 @@ class CartController extends Controller
                 '✓ Produk berhasil ditambahkan ke keranjang.'
             );
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -205,13 +202,13 @@ class CartController extends Controller
 
         foreach ($cartItems as $item) {
 
-            if (!$item->product) {
+            if (! $item->product) {
                 continue;
             }
 
             $cartKey =
-                $item->product_id .
-                '_' .
+                $item->product_id.
+                '_'.
                 ($item->print_custom
                     ? 'print'
                     : 'normal');
@@ -231,35 +228,25 @@ class CartController extends Controller
             $total += $itemTotal;
 
             $cart[$cartKey] = [
-                'cart_key' =>
-                    $cartKey,
+                'cart_key' => $cartKey,
 
-                'id' =>
-                    $item->product_id,
+                'id' => $item->product_id,
 
-                'name' =>
-                    $item->product->name,
+                'name' => $item->product->name,
 
-                'price' =>
-                    $item->product->price,
+                'price' => $item->product->price,
 
-                'image' =>
-                    $item->product->image,
+                'image' => $item->product->image,
 
-                'quantity' =>
-                    $item->quantity,
+                'quantity' => $item->quantity,
 
-                'print_custom' =>
-                    $item->print_custom,
+                'print_custom' => $item->print_custom,
 
-                'print_price' =>
-                    $item->print_price,
+                'print_price' => $item->print_price,
 
-                'design_image' =>
-                    $item->design_image,
+                'design_image' => $item->design_image,
 
-                'cart_id' =>
-                    $item->id,
+                'cart_id' => $item->id,
             ];
         }
 
@@ -271,7 +258,6 @@ class CartController extends Controller
             )
         );
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -309,7 +295,7 @@ class CartController extends Controller
             ->where('print_custom', $printCustom)
             ->first();
 
-        if (!$cartItem) {
+        if (! $cartItem) {
             return redirect()
                 ->route('cart.index')
                 ->with(
@@ -337,7 +323,7 @@ class CartController extends Controller
                 $cartItem->product_id
             );
 
-            if (!$product) {
+            if (! $product) {
 
                 $cartItem->delete();
 
@@ -373,7 +359,6 @@ class CartController extends Controller
             );
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | REMOVE ITEM
@@ -408,7 +393,6 @@ class CartController extends Controller
                 'Produk berhasil dihapus dari keranjang.'
             );
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -470,35 +454,25 @@ class CartController extends Controller
             if ($cartItem && $cartItem->product) {
 
                 $selectedCart[$cartKey] = [
-                    'cart_key' =>
-                        $cartKey,
+                    'cart_key' => $cartKey,
 
-                    'id' =>
-                        $cartItem->product_id,
+                    'id' => $cartItem->product_id,
 
-                    'name' =>
-                        $cartItem->product->name,
+                    'name' => $cartItem->product->name,
 
-                    'price' =>
-                        $cartItem->product->price,
+                    'price' => $cartItem->product->price,
 
-                    'image' =>
-                        $cartItem->product->image,
+                    'image' => $cartItem->product->image,
 
-                    'quantity' =>
-                        $cartItem->quantity,
+                    'quantity' => $cartItem->quantity,
 
-                    'print_custom' =>
-                        $cartItem->print_custom,
+                    'print_custom' => $cartItem->print_custom,
 
-                    'print_price' =>
-                        $cartItem->print_price,
+                    'print_price' => $cartItem->print_price,
 
-                    'design_image' =>
-                        $cartItem->design_image,
+                    'design_image' => $cartItem->design_image,
 
-                    'cart_id' =>
-                        $cartItem->id,
+                    'cart_id' => $cartItem->id,
                 ];
             }
         }
@@ -532,7 +506,6 @@ class CartController extends Controller
             ->route('checkout');
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | CHECKOUT PAGE
@@ -540,92 +513,91 @@ class CartController extends Controller
     */
 
     public function checkout()
-{
-    $checkoutCart =
-        session()->get(
-            'checkout_cart',
-            []
+    {
+        $checkoutCart =
+            session()->get(
+                'checkout_cart',
+                []
+            );
+
+        if (empty($checkoutCart)) {
+            return redirect()
+                ->route('cart.index')
+                ->with(
+                    'error',
+                    'Silakan pilih produk yang ingin di-checkout terlebih dahulu.'
+                );
+        }
+
+        $user = auth()->user();
+
+        $customer =
+            $user->customer;
+
+        if (! $customer) {
+            return redirect()
+                ->route('cart.index')
+                ->with(
+                    'error',
+                    'Data pelanggan belum tersedia. Silakan lengkapi profil terlebih dahulu.'
+                );
+        }
+
+        $subtotal = 0;
+
+        foreach ($checkoutCart as $item) {
+
+            $productPrice =
+                $item['price'] *
+                $item['quantity'];
+
+            $printPrice =
+                ($item['print_price'] ?? 0) *
+                $item['quantity'];
+
+            $subtotal +=
+                $productPrice +
+                $printPrice;
+        }
+
+        $discountPercentage = match (
+            $customer->membership_level
+        ) {
+            'bronze' => 5,
+            'silver' => 10,
+            'gold' => 15,
+            default => 0,
+        };
+
+        $discountAmount =
+            $subtotal *
+            ($discountPercentage / 100);
+
+        $total =
+            $subtotal -
+            $discountAmount;
+
+        $birthdayVoucher = Voucher::where('customer_id', $customer->id)
+            ->where('type', 'birthday')
+            ->where('is_used', false)
+            ->whereDate('valid_from', '<=', today())
+            ->whereDate('valid_until', '>=', today())
+            ->latest()
+            ->first();
+
+        return view(
+            'checkout.index',
+            compact(
+                'checkoutCart',
+                'customer',
+                'subtotal',
+                'discountPercentage',
+                'discountAmount',
+                'total',
+                'birthdayVoucher'
+            )
         );
-
-    if (empty($checkoutCart)) {
-        return redirect()
-            ->route('cart.index')
-            ->with(
-                'error',
-                'Silakan pilih produk yang ingin di-checkout terlebih dahulu.'
-            );
     }
-
-    $user = auth()->user();
-
-    $customer =
-        $user->customer;
-
-    if (!$customer) {
-        return redirect()
-            ->route('cart.index')
-            ->with(
-                'error',
-                'Data pelanggan belum tersedia. Silakan lengkapi profil terlebih dahulu.'
-            );
-    }
-
-    $subtotal = 0;
-
-    foreach ($checkoutCart as $item) {
-
-        $productPrice =
-            $item['price'] *
-            $item['quantity'];
-
-        $printPrice =
-            ($item['print_price'] ?? 0) *
-            $item['quantity'];
-
-        $subtotal +=
-            $productPrice +
-            $printPrice;
-    }
-
-    $discountPercentage = match (
-        $customer->membership_level
-    ) {
-        'bronze' => 5,
-        'silver' => 10,
-        'gold' => 15,
-        default => 0,
-    };
-
-    $discountAmount =
-        $subtotal *
-        ($discountPercentage / 100);
-
-    $total =
-        $subtotal -
-        $discountAmount;
-
-    $birthdayVoucher = Voucher::where('customer_id', $customer->id)
-        ->where('type', 'birthday')
-        ->where('is_used', false)
-        ->whereDate('valid_from', '<=', today())
-        ->whereDate('valid_until', '>=', today())
-        ->latest()
-        ->first();
-
-    return view(
-        'checkout.index',
-        compact(
-            'checkoutCart',
-            'customer',
-            'subtotal',
-            'discountPercentage',
-            'discountAmount',
-            'total',
-            'birthdayVoucher'
-        )
-    );
-}
-
 
     /*
     |--------------------------------------------------------------------------
@@ -634,7 +606,8 @@ class CartController extends Controller
     */
 
     public function processCheckout(
-        Request $request
+        Request $request,
+        CloudinaryUploader $cloudinaryUploader
     ) {
         $request->validate([
             'payment_proof' => [
@@ -644,17 +617,13 @@ class CartController extends Controller
                 'max:2048',
             ],
         ], [
-            'payment_proof.required' =>
-                'Bukti pembayaran wajib diupload.',
+            'payment_proof.required' => 'Bukti pembayaran wajib diupload.',
 
-            'payment_proof.file' =>
-                'File bukti pembayaran tidak valid.',
+            'payment_proof.file' => 'File bukti pembayaran tidak valid.',
 
-            'payment_proof.mimes' =>
-                'Bukti pembayaran harus berupa JPG, JPEG, PNG, WEBP, atau PDF.',
+            'payment_proof.mimes' => 'Bukti pembayaran harus berupa JPG, JPEG, PNG, WEBP, atau PDF.',
 
-            'payment_proof.max' =>
-                'Ukuran bukti pembayaran maksimal 2 MB.',
+            'payment_proof.max' => 'Ukuran bukti pembayaran maksimal 2 MB.',
         ]);
 
         $checkoutCart =
@@ -677,7 +646,7 @@ class CartController extends Controller
         $customer =
             $user->customer;
 
-        if (!$customer) {
+        if (! $customer) {
             return redirect()
                 ->route('cart.index')
                 ->with(
@@ -687,6 +656,9 @@ class CartController extends Controller
         }
 
         try {
+            $paymentProof = $cloudinaryUploader->upload(
+                $request->file('payment_proof')
+            );
 
             $order = DB::transaction(
                 function () use (
@@ -721,8 +693,8 @@ class CartController extends Controller
                                 ->first();
 
                         if (
-                            !$cartItem ||
-                            !$cartItem->product
+                            ! $cartItem ||
+                            ! $cartItem->product
                         ) {
                             throw new \Exception(
                                 'Produk yang dipilih sudah tidak tersedia di keranjang.'
@@ -736,12 +708,12 @@ class CartController extends Controller
                                 );
 
                         if (
-                            !$product ||
-                            !$product->is_active
+                            ! $product ||
+                            ! $product->is_active
                         ) {
                             throw new \Exception(
-                                'Produk ' .
-                                $selectedItem['name'] .
+                                'Produk '.
+                                $selectedItem['name'].
                                 ' sudah tidak tersedia.'
                             );
                         }
@@ -751,8 +723,8 @@ class CartController extends Controller
                             $product->stock
                         ) {
                             throw new \Exception(
-                                'Stok produk ' .
-                                $product->name .
+                                'Stok produk '.
+                                $product->name.
                                 ' tidak mencukupi.'
                             );
                         }
@@ -770,11 +742,9 @@ class CartController extends Controller
                             $printPrice;
 
                         $cartItems[] = [
-                            'cart' =>
-                                $cartItem,
+                            'cart' => $cartItem,
 
-                            'product' =>
-                                $product,
+                            'product' => $product,
                         ];
                     }
 
@@ -785,70 +755,70 @@ class CartController extends Controller
                     */
 
                     $discountPercentage = match (
-    $customer->membership_level
-) {
-    'bronze' => 5,
-    'silver' => 10,
-    'gold' => 15,
-    default => 0,
-};
+                        $customer->membership_level
+                    ) {
+                        'bronze' => 5,
+                        'silver' => 10,
+                        'gold' => 15,
+                        default => 0,
+                    };
 
-$membershipDiscountAmount =
-    $subtotal *
-    ($discountPercentage / 100);
+                    $membershipDiscountAmount =
+                        $subtotal *
+                        ($discountPercentage / 100);
 
-$birthdayVoucher = null;
+                    $birthdayVoucher = null;
 
-$birthdayVoucherDiscountAmount = 0;
+                    $birthdayVoucherDiscountAmount = 0;
 
-if ($request->boolean('use_birthday_voucher')) {
+                    if ($request->boolean('use_birthday_voucher')) {
 
-    $birthdayVoucher = Voucher::where('customer_id', $customer->id)
-        ->where('type', 'birthday')
-        ->where('is_used', false)
-        ->whereDate('valid_from', '<=', today())
-        ->whereDate('valid_until', '>=', today())
-        ->latest()
-        ->first();
+                        $birthdayVoucher = Voucher::where('customer_id', $customer->id)
+                            ->where('type', 'birthday')
+                            ->where('is_used', false)
+                            ->whereDate('valid_from', '<=', today())
+                            ->whereDate('valid_until', '>=', today())
+                            ->latest()
+                            ->first();
 
-    if (!$birthdayVoucher) {
+                        if (! $birthdayVoucher) {
 
-        throw new \Exception(
-            'Birthday Voucher tidak tersedia atau sudah tidak berlaku.'
-        );
-    }
+                            throw new \Exception(
+                                'Birthday Voucher tidak tersedia atau sudah tidak berlaku.'
+                            );
+                        }
 
-    $afterMembershipDiscount =
-        $subtotal -
-        $membershipDiscountAmount;
+                        $afterMembershipDiscount =
+                            $subtotal -
+                            $membershipDiscountAmount;
 
-    if (
-        $afterMembershipDiscount <
-        $birthdayVoucher->minimum_purchase
-    ) {
-        throw new \Exception(
-            'Minimum pembelian untuk voucher belum terpenuhi.'
-        );
-    }
+                        if (
+                            $afterMembershipDiscount <
+                            $birthdayVoucher->minimum_purchase
+                        ) {
+                            throw new \Exception(
+                                'Minimum pembelian untuk voucher belum terpenuhi.'
+                            );
+                        }
 
-    $calculatedBirthdayDiscount =
-    $afterMembershipDiscount *
-    ($birthdayVoucher->discount_percent / 100);
+                        $calculatedBirthdayDiscount =
+                        $afterMembershipDiscount *
+                        ($birthdayVoucher->discount_percent / 100);
 
-$birthdayVoucherDiscountAmount =
-    min(
-        $calculatedBirthdayDiscount,
-        $birthdayVoucher->maximum_discount
-    );
-}
+                        $birthdayVoucherDiscountAmount =
+                            min(
+                                $calculatedBirthdayDiscount,
+                                $birthdayVoucher->maximum_discount
+                            );
+                    }
 
-$discountAmount =
-    $membershipDiscountAmount +
-    $birthdayVoucherDiscountAmount;
+                    $discountAmount =
+                        $membershipDiscountAmount +
+                        $birthdayVoucherDiscountAmount;
 
-$total =
-    $subtotal -
-    $discountAmount;
+                    $total =
+                        $subtotal -
+                        $discountAmount;
 
                     /*
                     |--------------------------------------------------------------------------
@@ -858,34 +828,27 @@ $total =
 
                     $order =
                         Order::create([
-                            'customer_id' =>
-                                $customer->id,
+                            'customer_id' => $customer->id,
 
-                            'order_number' =>
-                                'ORD-' .
+                            'order_number' => 'ORD-'.
                                 now()->format(
                                     'YmdHis'
-                                ) .
-                                '-' .
+                                ).
+                                '-'.
                                 random_int(
                                     100,
                                     999
                                 ),
 
-                            'order_date' =>
-                                now(),
+                            'order_date' => now(),
 
-                            'total_amount' =>
-                                $total,
+                            'total_amount' => $total,
 
-                            'discount_percentage' =>
-                                $discountPercentage,
+                            'discount_percentage' => $discountPercentage,
 
-                            'discount_amount' =>
-                                $discountAmount,
+                            'discount_amount' => $discountAmount,
 
-                            'status' =>
-                                'pending',
+                            'status' => 'pending',
                         ]);
 
                     /*
@@ -918,29 +881,21 @@ $total =
                             $cartItem->quantity;
 
                         OrderItem::create([
-                            'order_id' =>
-                                $order->id,
+                            'order_id' => $order->id,
 
-                            'product_id' =>
-                                $product->id,
+                            'product_id' => $product->id,
 
-                            'quantity' =>
-                                $cartItem->quantity,
+                            'quantity' => $cartItem->quantity,
 
-                            'price' =>
-                                $product->price,
+                            'price' => $product->price,
 
-                            'subtotal' =>
-                                $itemSubtotal,
+                            'subtotal' => $itemSubtotal,
 
-                            'print_custom' =>
-                                $printCustom,
+                            'print_custom' => $printCustom,
 
-                            'print_price' =>
-                                $printPrice,
+                            'print_price' => $printPrice,
 
-                            'design_image' =>
-                                $cartItem->design_image,
+                            'design_image' => $cartItem->design_image,
                         ]);
 
                         /*
@@ -973,37 +928,28 @@ $total =
             |--------------------------------------------------------------------------
             */
 
-            $paymentProof =
-                $request
-                    ->file('payment_proof')
-                    ->store(
-                        'payment-proofs',
-                        'public'
-                    );
-
             $order->update([
-                'payment_proof' =>
-                    $paymentProof,
+                'payment_proof' => $paymentProof,
             ]);
 
             if ($request->boolean('use_birthday_voucher')) {
 
-    $birthdayVoucher = Voucher::where('customer_id', $customer->id)
-        ->where('type', 'birthday')
-        ->where('is_used', false)
-        ->whereDate('valid_from', '<=', today())
-        ->whereDate('valid_until', '>=', today())
-        ->latest()
-        ->first();
+                $birthdayVoucher = Voucher::where('customer_id', $customer->id)
+                    ->where('type', 'birthday')
+                    ->where('is_used', false)
+                    ->whereDate('valid_from', '<=', today())
+                    ->whereDate('valid_until', '>=', today())
+                    ->latest()
+                    ->first();
 
-    if ($birthdayVoucher) {
+                if ($birthdayVoucher) {
 
-        $birthdayVoucher->update([
-            'is_used' => true,
-            'used_at' => now(),
-        ]);
-    }
-}
+                    $birthdayVoucher->update([
+                        'is_used' => true,
+                        'used_at' => now(),
+                    ]);
+                }
+            }
 
             /*
             |--------------------------------------------------------------------------

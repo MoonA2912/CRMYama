@@ -299,7 +299,7 @@
                                             @if($item->product && $item->product->image)
 
                                                 <img
-                                                    src="{{ asset('storage/' . $item->product->image) }}"
+                                                    src="{{ \App\Support\StoredMediaUrl::resolve($item->product->image) }}"
                                                     alt="{{ $item->product->name }}"
                                                     class="w-14 h-14 object-contain"
                                                 >
@@ -378,12 +378,12 @@
                                                 </div>
 
                                                 <a
-                                                    href="{{ asset('storage/' . $item->design_image) }}"
+                                                    href="{{ \App\Support\StoredMediaUrl::resolve($item->design_image) }}"
                                                     target="_blank"
                                                     class="sm:ml-auto"
                                                 >
                                                     <img
-                                                        src="{{ asset('storage/' . $item->design_image) }}"
+                                                        src="{{ \App\Support\StoredMediaUrl::resolve($item->design_image) }}"
                                                         alt="Desain Custom Print"
                                                         class="w-24 h-24 object-cover rounded-xl
                                                                border border-gray-200
@@ -504,7 +504,7 @@
                                 @if($order->payment_proof)
 
                                     <a
-                                        href="{{ asset('storage/' . $order->payment_proof) }}"
+                                        href="{{ \App\Support\StoredMediaUrl::resolve($order->payment_proof) }}"
                                         target="_blank"
                                         class="block mt-3 px-4 py-2.5
                                                text-center text-sm font-medium

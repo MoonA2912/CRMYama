@@ -181,7 +181,7 @@
                                                             @if($item->product && $item->product->image)
 
                                                                 <img
-                                                                    src="{{ asset('storage/' . $item->product->image) }}"
+                                                                    src="{{ \App\Support\StoredMediaUrl::resolve($item->product->image) }}"
                                                                     alt="{{ $item->product->name }}"
                                                                     class="w-full h-full object-cover"
                                                                 >

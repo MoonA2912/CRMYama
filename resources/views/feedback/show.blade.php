@@ -234,7 +234,7 @@
                                                 @if($item->product?->image)
 
                                                     <img
-                                                        src="{{ asset('storage/' . $item->product->image) }}"
+                                                        src="{{ \App\Support\StoredMediaUrl::resolve($item->product->image) }}"
                                                         alt="{{ $item->product->name }}"
                                                         class="h-full w-full object-cover"
                                                     >

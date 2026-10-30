@@ -334,7 +334,7 @@
 
 
                                         <a
-                                            href="{{ asset('storage/' . $order->payment_proof) }}"
+                                            href="{{ \App\Support\StoredMediaUrl::resolve($order->payment_proof) }}"
                                             target="_blank"
                                             class="inline-flex items-center
                                                    justify-center

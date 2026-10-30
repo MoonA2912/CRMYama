@@ -292,13 +292,13 @@
                             @if (in_array($extension, ['jpg', 'jpeg', 'png', 'webp']))
 
                                 <a
-                                    href="{{ asset('storage/' . $order->payment_proof) }}"
+                                    href="{{ \App\Support\StoredMediaUrl::resolve($order->payment_proof) }}"
                                     target="_blank"
                                     class="inline-block"
                                 >
 
                                     <img
-                                        src="{{ asset('storage/' . $order->payment_proof) }}"
+                                        src="{{ \App\Support\StoredMediaUrl::resolve($order->payment_proof) }}"
                                         alt="Bukti Pembayaran"
                                         class="w-52 h-52 object-contain
                                                rounded-xl
@@ -318,7 +318,7 @@
                             @elseif ($extension === 'pdf')
 
                                 <a
-                                    href="{{ asset('storage/' . $order->payment_proof) }}"
+                                    href="{{ \App\Support\StoredMediaUrl::resolve($order->payment_proof) }}"
                                     target="_blank"
                                     class="inline-flex items-center gap-2
                                            px-4 py-2.5 rounded-xl
@@ -482,7 +482,7 @@
                                                     @if ($item->product && $item->product->image)
 
                                                         <img
-                                                            src="{{ asset('storage/' . $item->product->image) }}"
+                                                            src="{{ \App\Support\StoredMediaUrl::resolve($item->product->image) }}"
                                                             alt="{{ $item->product->name }}"
                                                             class="w-16 h-16 rounded-xl
                                                                    object-cover
@@ -591,13 +591,13 @@
 
 
                                                                         <a
-                                                                            href="{{ asset('storage/' . $item->design_image) }}"
+                                                                            href="{{ \App\Support\StoredMediaUrl::resolve($item->design_image) }}"
                                                                             target="_blank"
                                                                             class="inline-block"
                                                                         >
 
                                                                             <img
-                                                                                src="{{ asset('storage/' . $item->design_image) }}"
+                                                                                src="{{ \App\Support\StoredMediaUrl::resolve($item->design_image) }}"
                                                                                 alt="Desain Printed Golf Balls"
                                                                                 class="w-24 h-24
                                                                                        object-cover

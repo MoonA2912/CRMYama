@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\CloudinaryUploadException;
 use App\Models\Customer;
 use App\Models\Order;
-use Illuminate\Http\Request;
+use App\Models\Product;
 use App\Services\MembershipService;
+use App\Support\CloudinaryUploader;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
@@ -75,32 +79,41 @@ class OrderController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Order $order)
-{
-    $validated = $request->validate([
-        'customer_id' => 'required|exists:customers,id',
-        'order_date' => 'required|date',
-        'status' => 'required|in:pending,paid,processing,shipped,completed,cancelled',
-        'payment_proof' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf|max:2048',
-    ]);
+    public function update(
+        Request $request,
+        Order $order,
+        CloudinaryUploader $cloudinaryUploader
+    ) {
+        $validated = $request->validate([
+            'customer_id' => 'required|exists:customers,id',
+            'order_date' => 'required|date',
+            'status' => 'required|in:pending,paid,processing,shipped,completed,cancelled',
+            'payment_proof' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf|max:2048',
+        ]);
 
-    if ($request->hasFile('payment_proof')) {
-        $validated['payment_proof'] = $request
-            ->file('payment_proof')
-            ->store('payment-proofs', 'public');
+        if ($request->hasFile('payment_proof')) {
+            try {
+                $validated['payment_proof'] = $cloudinaryUploader->upload(
+                    $request->file('payment_proof')
+                );
+            } catch (CloudinaryUploadException $exception) {
+                return back()
+                    ->withErrors(['payment_proof' => $exception->getMessage()])
+                    ->withInput();
+            }
+        }
+
+        $order->update($validated);
+
+        // Sinkronisasi membership berdasarkan seluruh
+        // transaksi completed pada tahun berjalan.
+        app(MembershipService::class)
+            ->updateMembership($order->customer);
+
+        return redirect()
+            ->route('orders.show', $order)
+            ->with('success', 'Pesanan berhasil diperbarui.');
     }
-
-    $order->update($validated);
-
-    // Sinkronisasi membership berdasarkan seluruh
-    // transaksi completed pada tahun berjalan.
-    app(MembershipService::class)
-        ->updateMembership($order->customer);
-
-    return redirect()
-        ->route('orders.show', $order)
-        ->with('success', 'Pesanan berhasil diperbarui.');
-}
 
     /**
      * Remove the specified resource from storage.
@@ -109,100 +122,101 @@ class OrderController extends Controller
     {
         //
     }
-public function customerOrders()
-{
-    $customer = auth()->user()->customer;
 
-    if (!$customer || blank($customer->phone)) {
-        return redirect()
-            ->route('profile.edit')
-            ->with(
-                'error',
-                'Silakan lengkapi profil Anda, terutama nomor telepon, sebelum mengakses Orders.'
-            );
-    }
+    public function customerOrders()
+    {
+        $customer = auth()->user()->customer;
 
-    $orders = $customer->orders()
-        ->with('items.product')
-        ->latest('order_date')
-        ->get();
-
-    return view('customer-orders.index', compact('orders'));
-}
-
-public function customerShow(Order $order)
-{
-    $customer = auth()->user()->customer;
-
-    if (!$customer || blank($customer->phone)) {
-        return redirect()
-            ->route('profile.edit')
-            ->with(
-                'error',
-                'Silakan lengkapi profil Anda, terutama nomor telepon, sebelum mengakses Orders.'
-            );
-    }
-
-    // Pastikan pesanan milik pelanggan yang sedang login.
-    if ((int) $order->customer_id !== (int) $customer->id) {
-        abort(403);
-    }
-
-    $order->load([
-        'items.product',
-        'feedbacks',
-    ]);
-
-    return view('customer-orders.show', compact('order'));
-}
-
-public function customerCancel(Order $order)
-{
-    $customer = auth()->user()->customer;
-
-    if (!$customer || blank($customer->phone)) {
-        return redirect()
-            ->route('profile.edit')
-            ->with(
-                'error',
-                'Silakan lengkapi profil Anda, terutama nomor telepon, sebelum mengakses Orders.'
-            );
-    }
-
-    // Pelanggan hanya boleh membatalkan pesanan miliknya sendiri.
-    if ((int) $order->customer_id !== (int) $customer->id) {
-        abort(403);
-    }
-
-    // Hanya pesanan pending yang dapat dibatalkan.
-    if ($order->status !== 'pending') {
-        return back()->with(
-            'error',
-            'Pesanan hanya dapat dibatalkan saat status masih Pending.'
-        );
-    }
-
-    $order->load('items');
-
-    \Illuminate\Support\Facades\DB::transaction(
-        function () use ($order) {
-            foreach ($order->items as $item) {
-                $product = \App\Models\Product::lockForUpdate()
-                    ->find($item->product_id);
-
-                if ($product) {
-                    $product->increment('stock', $item->quantity);
-                }
-            }
-
-            $order->update([
-                'status' => 'cancelled',
-            ]);
+        if (! $customer || blank($customer->phone)) {
+            return redirect()
+                ->route('profile.edit')
+                ->with(
+                    'error',
+                    'Silakan lengkapi profil Anda, terutama nomor telepon, sebelum mengakses Orders.'
+                );
         }
-    );
 
-    return redirect()
-        ->route('customer.orders.show', $order)
-        ->with('success', 'Pesanan berhasil dibatalkan.');
-}
+        $orders = $customer->orders()
+            ->with('items.product')
+            ->latest('order_date')
+            ->get();
+
+        return view('customer-orders.index', compact('orders'));
+    }
+
+    public function customerShow(Order $order)
+    {
+        $customer = auth()->user()->customer;
+
+        if (! $customer || blank($customer->phone)) {
+            return redirect()
+                ->route('profile.edit')
+                ->with(
+                    'error',
+                    'Silakan lengkapi profil Anda, terutama nomor telepon, sebelum mengakses Orders.'
+                );
+        }
+
+        // Pastikan pesanan milik pelanggan yang sedang login.
+        if ((int) $order->customer_id !== (int) $customer->id) {
+            abort(403);
+        }
+
+        $order->load([
+            'items.product',
+            'feedbacks',
+        ]);
+
+        return view('customer-orders.show', compact('order'));
+    }
+
+    public function customerCancel(Order $order)
+    {
+        $customer = auth()->user()->customer;
+
+        if (! $customer || blank($customer->phone)) {
+            return redirect()
+                ->route('profile.edit')
+                ->with(
+                    'error',
+                    'Silakan lengkapi profil Anda, terutama nomor telepon, sebelum mengakses Orders.'
+                );
+        }
+
+        // Pelanggan hanya boleh membatalkan pesanan miliknya sendiri.
+        if ((int) $order->customer_id !== (int) $customer->id) {
+            abort(403);
+        }
+
+        // Hanya pesanan pending yang dapat dibatalkan.
+        if ($order->status !== 'pending') {
+            return back()->with(
+                'error',
+                'Pesanan hanya dapat dibatalkan saat status masih Pending.'
+            );
+        }
+
+        $order->load('items');
+
+        DB::transaction(
+            function () use ($order) {
+                foreach ($order->items as $item) {
+                    $product = Product::lockForUpdate()
+                        ->find($item->product_id);
+
+                    if ($product) {
+                        $product->increment('stock', $item->quantity);
+                    }
+                }
+
+                $order->update([
+                    'status' => 'cancelled',
+                ]);
+            }
+        );
+
+        return redirect()
+            ->route('customer.orders.show', $order)
+            ->with('success', 'Pesanan berhasil dibatalkan.');
+    }
 }

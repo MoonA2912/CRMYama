@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\CloudinaryUploadException;
 use App\Models\Product;
+use App\Support\CloudinaryUploader;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
@@ -18,34 +20,35 @@ class ProductController extends Controller
     }
 
     public function catalog(Request $request)
-{
-    $search = $request->input('search');
-    $category = $request->input('category');
+    {
+        $search = $request->input('search');
+        $category = $request->input('category');
 
-    $products = Product::where('is_active', true)
-        ->when($search, function ($query, $search) {
-            $query->where('name', 'like', '%' . $search . '%');
-        })
-        ->when($category, function ($query, $category) {
-            $query->where('category', $category);
-        })
-        ->orderBy('name')
-        ->get();
+        $products = Product::where('is_active', true)
+            ->when($search, function ($query, $search) {
+                $query->where('name', 'like', '%'.$search.'%');
+            })
+            ->when($category, function ($query, $category) {
+                $query->where('category', $category);
+            })
+            ->orderBy('name')
+            ->get();
 
-    $categories = Product::where('is_active', true)
-        ->whereNotNull('category')
-        ->where('category', '!=', '')
-        ->distinct()
-        ->orderBy('category')
-        ->pluck('category');
+        $categories = Product::where('is_active', true)
+            ->whereNotNull('category')
+            ->where('category', '!=', '')
+            ->distinct()
+            ->orderBy('category')
+            ->pluck('category');
 
-    return view('catalog.index', compact(
-        'products',
-        'search',
-        'category',
-        'categories'
-    ));
-}
+        return view('catalog.index', compact(
+            'products',
+            'search',
+            'category',
+            'categories'
+        ));
+    }
+
     /**
      * Show the form for creating a new resource.
      */
@@ -57,37 +60,44 @@ class ProductController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
-{
-    $validated = $request->validate([
-        'name' => 'required|string|max:255',
-        'category' => 'required|string|max:255',
-        'price' => 'required|numeric|min:0',
-        'stock' => 'required|integer|min:0',
-        'description' => 'nullable|string',
-        'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-        'is_active' => 'required|boolean',
-    ]);
+    public function store(Request $request, CloudinaryUploader $cloudinaryUploader)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'category' => 'required|string|max:255',
+            'price' => 'required|numeric|min:0',
+            'stock' => 'required|integer|min:0',
+            'description' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'is_active' => 'required|boolean',
+        ]);
 
-    if ($request->hasFile('image')) {
-        $validated['image'] = $request
-            ->file('image')
-            ->store('products', 'public');
-    }
+        if ($request->hasFile('image')) {
+            try {
+                $validated['image'] = $cloudinaryUploader->upload(
+                    $request->file('image')
+                );
+            } catch (CloudinaryUploadException $exception) {
+                return back()
+                    ->withErrors(['image' => $exception->getMessage()])
+                    ->withInput();
+            }
+        }
 
-    Product::create($validated);
+        Product::create($validated);
 
-    return redirect()
-        ->route('products.index')
-        ->with('success', 'Produk berhasil ditambahkan.');
+        return redirect()
+            ->route('products.index')
+            ->with('success', 'Produk berhasil ditambahkan.');
     }
 
     public function customerShow(Product $product)
     {
-    abort_unless($product->is_active, 404);
+        abort_unless($product->is_active, 404);
 
-    return view('catalog.show', compact('product'));
+        return view('catalog.show', compact('product'));
     }
+
     /**
      * Display the specified resource.
      */
@@ -107,30 +117,39 @@ class ProductController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Product $product)
-{
-    $validated = $request->validate([
-        'name' => 'required|string|max:255',
-        'category' => 'required|string|max:255',
-        'price' => 'required|numeric|min:0',
-        'stock' => 'required|integer|min:0',
-        'description' => 'nullable|string',
-        'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-        'is_active' => 'required|boolean',
-    ]);
+    public function update(
+        Request $request,
+        Product $product,
+        CloudinaryUploader $cloudinaryUploader
+    ) {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'category' => 'required|string|max:255',
+            'price' => 'required|numeric|min:0',
+            'stock' => 'required|integer|min:0',
+            'description' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'is_active' => 'required|boolean',
+        ]);
 
-    if ($request->hasFile('image')) {
-        $validated['image'] = $request
-            ->file('image')
-            ->store('products', 'public');
+        if ($request->hasFile('image')) {
+            try {
+                $validated['image'] = $cloudinaryUploader->upload(
+                    $request->file('image')
+                );
+            } catch (CloudinaryUploadException $exception) {
+                return back()
+                    ->withErrors(['image' => $exception->getMessage()])
+                    ->withInput();
+            }
+        }
+
+        $product->update($validated);
+
+        return redirect()
+            ->route('products.index')
+            ->with('success', 'Produk berhasil diperbarui.');
     }
-
-    $product->update($validated);
-
-    return redirect()
-        ->route('products.index')
-        ->with('success', 'Produk berhasil diperbarui.');
-}
 
     /**
      * Remove the specified resource from storage.

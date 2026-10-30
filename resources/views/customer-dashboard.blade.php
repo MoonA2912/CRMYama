@@ -133,7 +133,7 @@
 
                                 @if ($product->image)
 
-                                    <img src="{{ asset('storage/' . $product->image) }}"
+                                    <img src="{{ \App\Support\StoredMediaUrl::resolve($product->image) }}"
                                          alt="{{ $product->name }}"
                                          class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
 

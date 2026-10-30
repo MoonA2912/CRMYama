@@ -218,7 +218,7 @@
                                                 @if($item['image'])
 
                                                     <img
-                                                        src="{{ asset('storage/' . $item['image']) }}"
+                                                        src="{{ \App\Support\StoredMediaUrl::resolve($item['image']) }}"
                                                         alt="{{ $item['name'] }}"
                                                         class="w-full h-full
                                                                object-contain
@@ -317,7 +317,7 @@
 
 
                                                                 <img
-                                                                    src="{{ asset('storage/' . $item['design_image']) }}"
+                                                                    src="{{ \App\Support\StoredMediaUrl::resolve($item['design_image']) }}"
                                                                     alt="Desain custom print"
                                                                     class="w-16 h-16
                                                                            object-cover
