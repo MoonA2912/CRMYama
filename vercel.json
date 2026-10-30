@@ -26,6 +26,14 @@
             "dest": "/public/vendors/"
         },
         {
+            "src": "/logo-yama-green\\.png",
+            "dest": "/public/logo-yama-green.png"
+        },
+        {
+            "src": "/logo-yama\\.png",
+            "dest": "/public/logo-yama.png"
+        },
+        {
             "src": "/(.*)",
             "dest": "/api/index.php"
         }
